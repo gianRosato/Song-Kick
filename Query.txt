@@ -1,0 +1,93 @@
+//il locale che ha avuto più concerti
+
+create view concertiPerLocale as
+select l.* , count(c.*)
+from Concerto c ,Locale l
+where c.locale = l.id 
+group by l.id
+
+
+select *
+from Locale l,concertiPerLocale con
+where l.id= con.locale and
+     con.num_conc >= ALL (
+                          select Max(con1.num_conc)
+		          from concertiPerLocale con1
+                         )
+
+
+
+----------------------------------------------------------
+---op13) seleziona le citta con il maggior numero di concerti 
+
+select distinct cc.nome , cc.nazione
+from citta cc
+where cc.nome in (select citta
+		from numconcerticitta
+	        where 
+                count >= all(select count from numconcerticitta)
+                  )
+-----------------------------------------------------
+----OP5) RICERCA CONCERTI PER CITTA IN UN PERIODO
+
+select  l.id , l.nome , i.inizio
+from concertipercitta i,Locale l 
+where i.citta= 'Teramo' 
+and i.locale = l.id and cast(inizio as date) > '01-01-2022'
+	and cast(inizio as date) < '01-02-2022' 
+
+-----------------------------------------------------------------
+---op6 un utente ricerca concerti futuri per genere
+
+select c.inizio,l.nome,l.citta,c.importo
+from concerto c,spettacolo s, genere g,locale l
+where
+c.spettacolo = s.id and
+s.genere = g.nome and
+c.locale = l.id and
+c.inizio  > current_timestamp               
+--------------------------------------------------------------	 
+
+
+
+---op7)per ogni locale calcola i proprio follower e i 
+---primi tre locali ottengono un punteggio di : popolare
+
+select l.nome  as nome, count(f.follower) as follower
+from Locale l,FollowLocale f
+where l.id = f.locale 
+group by l.id
+order by follower desc
+limit 3
+---------------------------------------------------------------
+
+
+---OP.8) seleziona il locale  con il maggior numero di concerti a 
+         pagamento
+create view concPagamento as
+select l.id,count(c.*) as num_c
+from locale l,concerto c
+where l.id =c.locale and
+c.gratis = 'false'
+group by l.id
+
+select distinct l.id,l.nome
+from locale l
+where l.id in (select id
+		from concPagamento
+	        where count >= all(select count from concPagamento ))
+---------------------------------------------------------------------
+
+
+
+   
+
+-----------------------------
+
+
+
+
+
+
+
+		   
